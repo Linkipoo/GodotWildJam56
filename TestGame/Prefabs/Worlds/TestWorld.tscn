@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3 uid="uid://dfqjs55vix3if"]
+
+[ext_resource type="Texture2D" uid="uid://bkignw2bi0fu3" path="res://Assets/Sprites/icon.svg" id="1_iugo5"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(386, 358)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon2" type="Sprite2D" parent="."]
+position = Vector2(831, 246)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon3" type="Sprite2D" parent="."]
+position = Vector2(176, 428)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon4" type="Sprite2D" parent="."]
+position = Vector2(614, 429)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon5" type="Sprite2D" parent="."]
+position = Vector2(259, 193)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon6" type="Sprite2D" parent="."]
+position = Vector2(585, 232)
+texture = ExtResource("1_iugo5")
