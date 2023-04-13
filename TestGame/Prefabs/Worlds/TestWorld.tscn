@@ -5,25 +5,33 @@
 [node name="Node2D" type="Node2D"]
 
 [node name="Icon" type="Sprite2D" parent="."]
-position = Vector2(386, 358)
+position = Vector2(496, 523)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon7" type="Sprite2D" parent="."]
+position = Vector2(335, 83)
+texture = ExtResource("1_iugo5")
+
+[node name="Icon8" type="Sprite2D" parent="."]
+position = Vector2(711, 104)
 texture = ExtResource("1_iugo5")
 
 [node name="Icon2" type="Sprite2D" parent="."]
-position = Vector2(831, 246)
+position = Vector2(701, 505)
 texture = ExtResource("1_iugo5")
 
 [node name="Icon3" type="Sprite2D" parent="."]
-position = Vector2(176, 428)
+position = Vector2(87, 413)
 texture = ExtResource("1_iugo5")
 
 [node name="Icon4" type="Sprite2D" parent="."]
-position = Vector2(614, 429)
+position = Vector2(307, 495)
 texture = ExtResource("1_iugo5")
 
 [node name="Icon5" type="Sprite2D" parent="."]
-position = Vector2(259, 193)
+position = Vector2(485, 291)
 texture = ExtResource("1_iugo5")
 
 [node name="Icon6" type="Sprite2D" parent="."]
-position = Vector2(585, 232)
+position = Vector2(872, 388)
 texture = ExtResource("1_iugo5")
