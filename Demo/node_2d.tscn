@@ -1,6 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://b1j0i7mhm1g8i"]
+[gd_scene load_steps=9 format=3 uid="uid://b1j0i7mhm1g8i"]
 
 [ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_61qna"]
+[ext_resource type="Texture2D" uid="uid://dq1lc504k0g1l" path="res://Sprites/layout.png" id="1_ia7dp"]
+[ext_resource type="PackedScene" uid="uid://ckebybnrrpg8i" path="res://Crate.tscn" id="3_2q86o"]
+[ext_resource type="PackedScene" uid="uid://dusa4tsy4pf4h" path="res://Enemy.tscn" id="3_14ico"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_j4qwq"]
 vertices = PackedVector2Array(949, -424, 1276, -427, 1276, 394, 952, 47, -384, 406, 602, 50, 245, -379, 596, -385, 248, 47, -39, 47, -381, -358, -48, -358)
@@ -71,23 +74,6 @@ func BodyIsAttacked(body):
 
 "
 
-[sub_resource type="GDScript" id="GDScript_cjlrm"]
-script/source = "extends CharacterBody2D
-var Speed = 250
-
-
-func _physics_process(delta):
-	velocity = velocity.normalized() * Speed
-	move_and_slide()
-	$NavigationAgent2D.target_position = get_parent().get_node(\"Player\").global_position
-	if not $NavigationAgent2D.is_navigation_finished():
-		var movement_delta = Speed * delta
-		var current_agent_position = global_position
-		var next_path_position = $NavigationAgent2D.get_next_path_position()
-		velocity = (next_path_position - current_agent_position).normalized() * movement_delta
-		move_and_slide()
-"
-
 [sub_resource type="GDScript" id="GDScript_xeupk"]
 script/source = "extends Camera2D
 
@@ -141,160 +127,60 @@ func GetShakeOffset(delta : float) -> Vector2:
 	return(Vector2(ShakeNoise.get_noise_2d(1,NoiseOffset),ShakeNoise.get_noise_2d(100,NoiseOffset)) *ShakeStrength)
 "
 
-[sub_resource type="GDScript" id="GDScript_h2uiw"]
-script/source = "extends RigidBody2D
-
-@export var Health := 5.0
-
-func TakeDamage(Amt:float):
-	Health -= Amt
-	if Health <= 0.0:
-		Die()
-
-func Die():
-	print(\"CRATE SMASHED\")
-	queue_free()
-"
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8yhq6"]
+size = Vector2(8.5, 8.5)
 
 [node name="Node2D" type="Node2D"]
 
+[node name="Layout" type="Sprite2D" parent="."]
+position = Vector2(14, 3)
+scale = Vector2(1.51, 1.51)
+texture = ExtResource("1_ia7dp")
+
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
-position = Vector2(-455, -54)
+visible = false
+position = Vector2(-399, -77)
 navigation_polygon = SubResource("NavigationPolygon_j4qwq")
 
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(644, -386)
+position = Vector2(225, 199)
 script = SubResource("GDScript_ldhnj")
 Speed = 600.0
 
 [node name="Icon" type="Sprite2D" parent="Player"]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("1_61qna")
 metadata/_edit_lock_ = true
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Player"]
+scale = Vector2(0.5, 0.5)
 polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
 metadata/_edit_lock_ = true
 
-[node name="Enemy" type="CharacterBody2D" parent="."]
-position = Vector2(-687, -297)
-script = SubResource("GDScript_cjlrm")
-
-[node name="Icon" type="Sprite2D" parent="Enemy"]
-modulate = Color(0.658824, 0, 0.137255, 1)
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Enemy"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="Enemy"]
+[node name="Enemy" parent="." instance=ExtResource("3_14ico")]
+position = Vector2(-593, -168)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(0.5, 0.5)
 script = SubResource("GDScript_xeupk")
 metadata/_edit_lock_ = true
 
-[node name="Crate" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(443, 537)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
+[node name="Crate2" parent="." instance=ExtResource("3_2q86o")]
+position = Vector2(-780, 142)
 
-[node name="Icon" type="Sprite2D" parent="Crate"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(270.25, -44)
+scale = Vector2(1, 23.388)
+shape = SubResource("RectangleShape2D_8yhq6")
 
-[node name="Crate2" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(75, 445)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(402, -171)
+scale = Vector2(1, 23.388)
+shape = SubResource("RectangleShape2D_8yhq6")
 
-[node name="Icon" type="Sprite2D" parent="Crate2"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate2"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate3" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(145, 852)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate3"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate3"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate4" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(-175, 656)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate4"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate4"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate5" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(-469, 901)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate5"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate5"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate6" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(770, 867)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate6"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate6"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate7" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(388, 873)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate7"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate7"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
-
-[node name="Crate8" type="RigidBody2D" parent="." groups=["Damageable"]]
-position = Vector2(823, 560)
-gravity_scale = 0.0
-script = SubResource("GDScript_h2uiw")
-
-[node name="Icon" type="Sprite2D" parent="Crate8"]
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate8"]
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(661, -236)
+scale = Vector2(1, 38.947)
+shape = SubResource("RectangleShape2D_8yhq6")

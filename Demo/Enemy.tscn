@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://dusa4tsy4pf4h"]
+
+[ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_c3bh4"]
+
+[sub_resource type="GDScript" id="GDScript_cjlrm"]
+script/source = "extends CharacterBody2D
+var Speed = 250
+
+
+func _physics_process(delta):
+	velocity = velocity.normalized() * Speed
+	move_and_slide()
+	$NavigationAgent2D.target_position = get_parent().get_node(\"Player\").global_position
+	if not $NavigationAgent2D.is_navigation_finished():
+		var movement_delta = Speed * delta
+		var current_agent_position = global_position
+		var next_path_position = $NavigationAgent2D.get_next_path_position()
+		velocity = (next_path_position - current_agent_position).normalized() * movement_delta
+		move_and_slide()
+"
+
+[node name="Enemy" type="CharacterBody2D"]
+position = Vector2(-687, -297)
+script = SubResource("GDScript_cjlrm")
+
+[node name="Icon" type="Sprite2D" parent="."]
+modulate = Color(0.658824, 0, 0.137255, 1)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_c3bh4")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+scale = Vector2(0.5, 0.5)
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]

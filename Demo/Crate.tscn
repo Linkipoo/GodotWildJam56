@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3 uid="uid://ckebybnrrpg8i"]
+
+[ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_yexbr"]
+
+[sub_resource type="GDScript" id="GDScript_h2uiw"]
+script/source = "extends RigidBody2D
+
+@export var Health := 5.0
+
+func TakeDamage(Amt:float):
+	Health -= Amt
+	if Health <= 0.0:
+		Die()
+
+func Die():
+	print(\"CRATE SMASHED\")
+	queue_free()
+"
+
+[node name="Crate2" type="RigidBody2D" groups=["Damageable"]]
+position = Vector2(38, 331)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_yexbr")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+scale = Vector2(0.45, 0.45)
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
