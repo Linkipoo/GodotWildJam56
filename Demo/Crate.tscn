@@ -5,6 +5,7 @@
 [sub_resource type="GDScript" id="GDScript_h2uiw"]
 script/source = "extends RigidBody2D
 
+##DAMAGEABLE CODE##############
 @export var Health := 5.0
 
 func TakeDamage(Amt:float):
@@ -13,8 +14,8 @@ func TakeDamage(Amt:float):
 		Die()
 
 func Die():
-	print(\"CRATE SMASHED\")
 	queue_free()
+###############################
 "
 
 [node name="Crate2" type="RigidBody2D" groups=["Damageable"]]

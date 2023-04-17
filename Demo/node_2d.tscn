@@ -1,7 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://b1j0i7mhm1g8i"]
+[gd_scene load_steps=8 format=3 uid="uid://xr4gmndbi1fq"]
 
-[ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_61qna"]
 [ext_resource type="Texture2D" uid="uid://dq1lc504k0g1l" path="res://Sprites/layout.png" id="1_ia7dp"]
+[ext_resource type="PackedScene" uid="uid://b03irlkf0rd4" path="res://Player.tscn" id="2_uc2ly"]
 [ext_resource type="PackedScene" uid="uid://ckebybnrrpg8i" path="res://Crate.tscn" id="3_2q86o"]
 [ext_resource type="PackedScene" uid="uid://dusa4tsy4pf4h" path="res://Enemy.tscn" id="3_14ico"]
 
@@ -12,70 +12,6 @@ size = Vector2(8.5, 8.5)
 vertices = PackedVector2Array(949, -424, 1276, -427, 1276, 394, 952, 47, -384, 406, 602, 50, 245, -379, 596, -385, 248, 47, -39, 47, -381, -358, -48, -358)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(3, 2, 4, 5), PackedInt32Array(6, 7, 5, 8), PackedInt32Array(8, 5, 4, 9), PackedInt32Array(9, 4, 10, 11)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(-381, -358, -48, -358, -39, 47, 248, 47, 245, -379, 596, -385, 602, 50, 952, 47, 949, -424, 1276, -427, 1276, 394, -384, 406)])
-
-[sub_resource type="GDScript" id="GDScript_ldhnj"]
-script/source = "extends CharacterBody2D
-
-@export var Speed := 10.0
-
-enum MonsterModes{
-	NORMAL,
-	SKINWALKER,#fast
-	DRAGON,#fire
-	KRAKEN#Tentacles
-}
-@export var Mode : MonsterModes = MonsterModes.NORMAL
-var IsAttackCoolingDown:=false
-@onready var AttackTimer = Timer.new()
-
-var NormalAttackRes = preload(\"res://NormalAttack.tscn\")
-
-func _ready():
-	add_child(AttackTimer)
-	AttackTimer.timeout.connect(SetAttackReady)
-
-func _process(delta):
-	if Input.is_action_just_pressed(\"Attack\") and !IsAttackCoolingDown:
-		match Mode:
-			MonsterModes.NORMAL:
-				print(\"Attacking\")
-				var NewAttack = NormalAttackRes.instantiate()
-				
-				add_child(NewAttack)
-				NewAttack.rotation = position.angle_to_point(get_global_mouse_position())
-				IsAttackCoolingDown = true
-				AttackTimer.start(.25)
-			MonsterModes.SKINWALKER:
-				pass
-			MonsterModes.DRAGON:
-				pass
-			MonsterModes.KRAKEN:
-				pass
-
-func _physics_process(delta):
-	# Get the input direction and handle the movement/deceleration.
-	# As good practice, you should replace UI actions with custom gameplay actions.
-	velocity.x = Input.get_axis(\"walk_left\", \"walk_right\")
-	velocity.y = Input.get_axis(\"walk_up\", \"walk_down\")
-	velocity = velocity.normalized() * (Speed + (Speed * int(Mode==MonsterModes.SKINWALKER)))
-#	if LR:
-#		velocity.x = LR
-#	else:
-#		velocity.x = move_toward(velocity.x, 0, SPEED)
-
-	move_and_slide()
-
-
-func SetAttackReady():
-	IsAttackCoolingDown = false
-
-func BodyIsAttacked(body):
-	if body.is_in_group(\"Damageable\"):
-		get_parent().get_node(\"Camera2D\").Shake(.05,50,.01)
-		body.TakeDamage(1.0)
-
-
-"
 
 [sub_resource type="GDScript" id="GDScript_xeupk"]
 script/source = "extends Camera2D
@@ -133,6 +69,7 @@ func GetShakeOffset(delta : float) -> Vector2:
 [node name="Node2D" type="Node2D"]
 
 [node name="Walls" type="Sprite2D" parent="."]
+self_modulate = Color(0.203922, 0.654902, 0.721569, 1)
 position = Vector2(14, 3)
 scale = Vector2(1.51, 1.51)
 texture = ExtResource("1_ia7dp")
@@ -323,25 +260,14 @@ position = Vector2(661, -236)
 scale = Vector2(1, 38.947)
 shape = SubResource("RectangleShape2D_8yhq6")
 
+[node name="Player" parent="." instance=ExtResource("2_uc2ly")]
+Speed = 100.0
+Mode = 1
+
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
 visible = false
 position = Vector2(-399, -77)
 navigation_polygon = SubResource("NavigationPolygon_j4qwq")
-
-[node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(225, 199)
-script = SubResource("GDScript_ldhnj")
-Speed = 600.0
-
-[node name="Icon" type="Sprite2D" parent="Player"]
-scale = Vector2(0.5, 0.5)
-texture = ExtResource("1_61qna")
-metadata/_edit_lock_ = true
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Player"]
-scale = Vector2(0.5, 0.5)
-polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
-metadata/_edit_lock_ = true
 
 [node name="Enemy" parent="." instance=ExtResource("3_14ico")]
 position = Vector2(-593, -168)

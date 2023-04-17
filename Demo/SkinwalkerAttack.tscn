@@ -1,0 +1,110 @@
+[gd_scene load_steps=8 format=3 uid="uid://dr7pkppnb827c"]
+
+[sub_resource type="GDScript" id="GDScript_nojeq"]
+script/source = "extends Area2D
+
+@export var AnimRot := 0.0 : set = SetAnimRot
+var OrigRot := 0.0
+
+func _ready():
+	$AnimationPlayer.play(\"Attack\")
+	OrigRot = rotation_degrees
+	rotation_degrees += 90
+
+func SetAnimRot(value:float):
+	AnimRot = value
+	rotation_degrees = OrigRot + AnimRot
+
+func _on_timer_timeout():
+	queue_free()
+
+func _on_body_entered(body):
+	get_parent().BodyIsAttacked(body)
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_shk8d"]
+
+[sub_resource type="Shader" id="Shader_x0lk3"]
+code = "shader_type canvas_item;
+
+void fragment() {
+	float pct = distance(UV,vec2(12.5));
+	COLOR.rgba = vec4(.8,.4,.4,float(bool(pct < 12.5)) * .5);
+	
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rwvd4"]
+shader = SubResource("Shader_x0lk3")
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_0nigp"]
+size = Vector2(100, 100)
+
+[sub_resource type="Animation" id="Animation_j5463"]
+resource_name = "Attack"
+length = 1.2
+tracks/0/type = "method"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(1.2),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_timer_timeout"
+}]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".:AnimRot")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [90.0, -90.0]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(5, 1), Vector2(1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_chfny"]
+_data = {
+"Attack": SubResource("Animation_j5463")
+}
+
+[node name="SkinwalkerAttack" type="Area2D"]
+script = SubResource("GDScript_nojeq")
+AnimRot = 90.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(50, 0)
+shape = SubResource("CircleShape2D_shk8d")
+debug_color = Color(0, 0.6, 0.701961, 0.419608)
+
+[node name="Sprite2D" type="Sprite2D" parent="CollisionShape2D"]
+material = SubResource("ShaderMaterial_rwvd4")
+scale = Vector2(0.204, 0.204)
+texture = SubResource("PlaceholderTexture2D_0nigp")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+speed_scale = 10.0
+libraries = {
+"": SubResource("AnimationLibrary_chfny")
+}
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

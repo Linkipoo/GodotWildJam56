@@ -4,7 +4,18 @@
 
 [sub_resource type="GDScript" id="GDScript_cjlrm"]
 script/source = "extends CharacterBody2D
-var Speed = 250
+var Speed = 100
+
+@export var Health := 5.0
+
+func TakeDamage(Amt:float):
+	Health -= Amt
+	if Health <= 0.0:
+		Die()
+
+func Die():
+	queue_free()
+
 
 
 func _physics_process(delta):
@@ -19,7 +30,7 @@ func _physics_process(delta):
 		move_and_slide()
 "
 
-[node name="Enemy" type="CharacterBody2D"]
+[node name="Enemy" type="CharacterBody2D" groups=["Damageable"]]
 position = Vector2(-687, -297)
 script = SubResource("GDScript_cjlrm")
 

@@ -1,0 +1,146 @@
+[gd_scene load_steps=4 format=3 uid="uid://b03irlkf0rd4"]
+
+[ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_2hqw2"]
+
+[sub_resource type="GDScript" id="GDScript_ldhnj"]
+script/source = "extends CharacterBody2D
+
+@export var Speed := 10.0
+
+enum MonsterModes{
+	NORMAL,
+	SKINWALKER,#fast
+	DRAGON,#fire
+	KRAKEN#Tentacles
+}
+@export var Mode : MonsterModes = MonsterModes.NORMAL
+var IsAttackCoolingDown:=false
+@onready var AttackTimer = Timer.new()
+
+var NormalAttackRes = preload(\"res://NormalAttack.tscn\")
+var SkinWalkerAttackRes = preload(\"res://SkinwalkerAttack.tscn\")
+
+func _ready():
+	add_child(AttackTimer)
+	AttackTimer.timeout.connect(SetAttackReady)
+
+func _process(delta):
+	if Input.is_action_just_pressed(\"Attack\") and !IsAttackCoolingDown:
+		match Mode:
+			MonsterModes.NORMAL:
+				print(\"Attacking\")
+				var NewAttack = NormalAttackRes.instantiate()
+				add_child(NewAttack)
+				NewAttack.rotation = position.angle_to_point(get_global_mouse_position())
+				IsAttackCoolingDown = true
+				AttackTimer.start(.25)
+			MonsterModes.SKINWALKER:
+				print(\"Attacking As Skinwalker\")
+				var NewAttack = SkinWalkerAttackRes.instantiate()
+				NewAttack.rotation = position.angle_to_point(get_global_mouse_position())
+				add_child(NewAttack)
+				IsAttackCoolingDown = true
+				AttackTimer.start(.25)
+			MonsterModes.DRAGON:
+				pass
+			MonsterModes.KRAKEN:
+				pass
+
+func _physics_process(delta):
+	velocity.x = Input.get_axis(\"walk_left\", \"walk_right\")
+	velocity.y = Input.get_axis(\"walk_up\", \"walk_down\")
+	velocity = velocity.normalized() * (Speed + (Speed * int(Mode==MonsterModes.SKINWALKER)))
+	move_and_slide()
+
+
+func SetAttackReady():
+	IsAttackCoolingDown = false
+
+func BodyIsAttacked(body):
+	if body.is_in_group(\"Damageable\"):
+		$Camera2D.Shake(.05,50,.01)
+		body.TakeDamage(1.0)
+
+
+"
+
+[sub_resource type="GDScript" id="GDScript_xeupk"]
+script/source = "extends Camera2D
+
+
+@onready var ShakeNoise = FastNoiseLite.new()
+
+#ORIG VALUES
+@export var ShakeStrength := 50.0
+@export var ShakeSpeed := 25.0
+#COPY OF ORIG VALUES
+var OrigShakeStrength := 0.0
+var OrigShakeSpeed := 0.0
+
+#OTHER VARS
+var NoiseOffset := 0.0
+var IsShaking := false
+var ShakeTimer := Timer.new()
+
+
+func Shake(time:float, Str:=OrigShakeStrength, Spd:=OrigShakeSpeed):
+	ShakeStrength = Str
+	ShakeSpeed = Spd
+	IsShaking = true
+	ShakeTimer.start(time)
+
+func ShakeComplete():
+	IsShaking = false
+	print(\"SHAKE OVER\")
+
+func _ready():
+	OrigShakeSpeed = ShakeSpeed
+	OrigShakeStrength = ShakeStrength
+	
+	ShakeTimer.one_shot = true
+	add_child(ShakeTimer)
+	ShakeTimer.timeout.connect(ShakeComplete)
+	
+	randomize()
+	ShakeNoise.seed = randi()
+	ShakeNoise.frequency = ShakeSpeed
+
+func _process(delta):
+	if IsShaking:
+		offset = GetShakeOffset(delta)
+	else:
+		offset = Vector2.ZERO
+		#print(offset)
+
+func GetShakeOffset(delta : float) -> Vector2:
+	NoiseOffset+=delta
+	return(Vector2(ShakeNoise.get_noise_2d(1,NoiseOffset),ShakeNoise.get_noise_2d(100,NoiseOffset)) *ShakeStrength)
+"
+
+[node name="Player" type="CharacterBody2D"]
+position = Vector2(225, 199)
+script = SubResource("GDScript_ldhnj")
+Speed = 600.0
+
+[node name="Icon" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("1_2hqw2")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+scale = Vector2(0.5, 0.5)
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(2, 2)
+position_smoothing_enabled = true
+position_smoothing_speed = 15.0
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+drag_left_margin = 0.18
+drag_top_margin = 0.18
+drag_right_margin = 0.18
+drag_bottom_margin = 0.18
+script = SubResource("GDScript_xeupk")
+metadata/_edit_lock_ = true
