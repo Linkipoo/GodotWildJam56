@@ -1,37 +1,155 @@
-[gd_scene load_steps=2 format=3 uid="uid://dfqjs55vix3if"]
+[gd_scene load_steps=11 format=3 uid="uid://cqmnbbuy3vrj7"]
 
 [ext_resource type="Texture2D" uid="uid://bkignw2bi0fu3" path="res://Assets/Sprites/icon.svg" id="1_iugo5"]
+[ext_resource type="Shader" path="res://Assets/Shaders/TestWorld.gdshader" id="1_yc0g1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y66l5"]
+shader = ExtResource("1_yc0g1")
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wv72q"]
+bounce = 1.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2gxk5"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2688u"]
+shader = ExtResource("1_yc0g1")
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_mp1wa"]
+
+[sub_resource type="Animation" id="Animation_rn0bx"]
+resource_name = "Pulse"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("CollisionShape2D:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(5, 5)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(5, 5)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_ct4x1"]
+_data = {
+"Pulse": SubResource("Animation_rn0bx")
+}
+
+[sub_resource type="GDScript" id="GDScript_jc3n6"]
+script/source = "extends AnimationPlayer
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	get_animation(\"Pulse\").loop_mode = Animation.LOOP_PINGPONG
+	play(\"Pulse\")
+	print(\"I'm A Ball\")
+
+func _process(delta):
+	pass
+
+func _physics_process(delta):
+	pass
+
+func _input(event):
+	pass
+"
 
 [node name="Node2D" type="Node2D"]
 
-[node name="Icon" type="Sprite2D" parent="."]
-position = Vector2(496, 523)
-texture = ExtResource("1_iugo5")
+[node name="Ball" type="RigidBody2D" parent="."]
+material = SubResource("ShaderMaterial_y66l5")
+position = Vector2(156, -182)
+physics_material_override = SubResource("PhysicsMaterial_wv72q")
 
-[node name="Icon7" type="Sprite2D" parent="."]
-position = Vector2(335, 83)
-texture = ExtResource("1_iugo5")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ball"]
+shape = SubResource("CircleShape2D_2gxk5")
+metadata/_edit_lock_ = true
 
-[node name="Icon8" type="Sprite2D" parent="."]
-position = Vector2(711, 104)
-texture = ExtResource("1_iugo5")
+[node name="Sprite2D" type="Sprite2D" parent="Ball"]
+material = SubResource("ShaderMaterial_2688u")
+texture = SubResource("PlaceholderTexture2D_mp1wa")
+region_enabled = true
+region_rect = Rect2(0, 0, 25, 25)
+metadata/_edit_lock_ = true
 
-[node name="Icon2" type="Sprite2D" parent="."]
-position = Vector2(701, 505)
-texture = ExtResource("1_iugo5")
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Ball"]
+libraries = {
+"": SubResource("AnimationLibrary_ct4x1")
+}
+script = SubResource("GDScript_jc3n6")
 
-[node name="Icon3" type="Sprite2D" parent="."]
-position = Vector2(87, 413)
-texture = ExtResource("1_iugo5")
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+position = Vector2(93, 436)
+rotation = 0.375246
 
-[node name="Icon4" type="Sprite2D" parent="."]
-position = Vector2(307, 495)
+[node name="Icon" type="Sprite2D" parent="StaticBody2D"]
 texture = ExtResource("1_iugo5")
+metadata/_edit_lock_ = true
 
-[node name="Icon5" type="Sprite2D" parent="."]
-position = Vector2(485, 291)
-texture = ExtResource("1_iugo5")
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
 
-[node name="Icon6" type="Sprite2D" parent="."]
-position = Vector2(872, 388)
+[node name="StaticBody2D2" type="StaticBody2D" parent="."]
+position = Vector2(846, 429)
+rotation = 0.844739
+
+[node name="Icon" type="Sprite2D" parent="StaticBody2D2"]
 texture = ExtResource("1_iugo5")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D2"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="StaticBody2D3" type="StaticBody2D" parent="."]
+position = Vector2(1000, 100)
+rotation = 1.5708
+scale = Vector2(18.305, 1)
+
+[node name="Icon" type="Sprite2D" parent="StaticBody2D3"]
+texture = ExtResource("1_iugo5")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D3"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="StaticBody2D5" type="StaticBody2D" parent="."]
+position = Vector2(-50, 100)
+rotation = 1.5708
+scale = Vector2(18.305, 1)
+
+[node name="Icon" type="Sprite2D" parent="StaticBody2D5"]
+texture = ExtResource("1_iugo5")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D5"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="StaticBody2D4" type="StaticBody2D" parent="."]
+position = Vector2(294, 579)
+scale = Vector2(18.305, 1)
+
+[node name="Icon" type="Sprite2D" parent="StaticBody2D4"]
+texture = ExtResource("1_iugo5")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D4"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true

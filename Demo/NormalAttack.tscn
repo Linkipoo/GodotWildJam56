@@ -1,0 +1,49 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1d3s02cdr4ru"]
+
+[sub_resource type="GDScript" id="GDScript_nojeq"]
+script/source = "extends Area2D
+
+func _on_timer_timeout():
+	queue_free()
+
+func _on_body_entered(body):
+	get_parent().BodyIsAttacked(body)
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_wu4pl"]
+radius = 50.0
+
+[sub_resource type="Shader" id="Shader_qump6"]
+code = "shader_type canvas_item;
+
+void fragment() {
+	float pct = distance(UV,vec2(12.5));
+	COLOR.rgba = vec4(.8,.8,.8,float(bool(pct < 12.5)) * .5);
+	
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x8kuj"]
+shader = SubResource("Shader_qump6")
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_0nigp"]
+size = Vector2(100, 100)
+
+[node name="NormalAttack" type="Area2D"]
+script = SubResource("GDScript_nojeq")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(50, 0)
+shape = SubResource("CircleShape2D_wu4pl")
+
+[node name="Sprite2D" type="Sprite2D" parent="CollisionShape2D"]
+material = SubResource("ShaderMaterial_x8kuj")
+texture = SubResource("PlaceholderTexture2D_0nigp")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.05
+one_shot = true
+autostart = true
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

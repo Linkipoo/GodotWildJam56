@@ -1,0 +1,300 @@
+[gd_scene load_steps=7 format=3 uid="uid://b1j0i7mhm1g8i"]
+
+[ext_resource type="Texture2D" uid="uid://forgtjyjf2lh" path="res://icon.svg" id="1_61qna"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_j4qwq"]
+vertices = PackedVector2Array(949, -424, 1276, -427, 1276, 394, 952, 47, -384, 406, 602, 50, 245, -379, 596, -385, 248, 47, -39, 47, -381, -358, -48, -358)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(3, 2, 4, 5), PackedInt32Array(6, 7, 5, 8), PackedInt32Array(8, 5, 4, 9), PackedInt32Array(9, 4, 10, 11)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(-381, -358, -48, -358, -39, 47, 248, 47, 245, -379, 596, -385, 602, 50, 952, 47, 949, -424, 1276, -427, 1276, 394, -384, 406)])
+
+[sub_resource type="GDScript" id="GDScript_ldhnj"]
+script/source = "extends CharacterBody2D
+
+@export var Speed := 10.0
+
+enum MonsterModes{
+	NORMAL,
+	SKINWALKER,#fast
+	DRAGON,#fire
+	KRAKEN#Tentacles
+}
+@export var Mode : MonsterModes = MonsterModes.NORMAL
+var IsAttackCoolingDown:=false
+@onready var AttackTimer = Timer.new()
+
+var NormalAttackRes = preload(\"res://NormalAttack.tscn\")
+
+func _ready():
+	add_child(AttackTimer)
+	AttackTimer.timeout.connect(SetAttackReady)
+
+func _process(delta):
+	if Input.is_action_just_pressed(\"Attack\") and !IsAttackCoolingDown:
+		match Mode:
+			MonsterModes.NORMAL:
+				print(\"Attacking\")
+				var NewAttack = NormalAttackRes.instantiate()
+				
+				add_child(NewAttack)
+				NewAttack.rotation = position.angle_to_point(get_global_mouse_position())
+				IsAttackCoolingDown = true
+				AttackTimer.start(.25)
+			MonsterModes.SKINWALKER:
+				pass
+			MonsterModes.DRAGON:
+				pass
+			MonsterModes.KRAKEN:
+				pass
+
+func _physics_process(delta):
+	# Get the input direction and handle the movement/deceleration.
+	# As good practice, you should replace UI actions with custom gameplay actions.
+	velocity.x = Input.get_axis(\"walk_left\", \"walk_right\")
+	velocity.y = Input.get_axis(\"walk_up\", \"walk_down\")
+	velocity = velocity.normalized() * (Speed + (Speed * int(Mode==MonsterModes.SKINWALKER)))
+#	if LR:
+#		velocity.x = LR
+#	else:
+#		velocity.x = move_toward(velocity.x, 0, SPEED)
+
+	move_and_slide()
+
+
+func SetAttackReady():
+	IsAttackCoolingDown = false
+
+func BodyIsAttacked(body):
+	if body.is_in_group(\"Damageable\"):
+		get_parent().get_node(\"Camera2D\").Shake(.05,50,.01)
+		body.TakeDamage(1.0)
+
+
+"
+
+[sub_resource type="GDScript" id="GDScript_cjlrm"]
+script/source = "extends CharacterBody2D
+var Speed = 250
+
+
+func _physics_process(delta):
+	velocity = velocity.normalized() * Speed
+	move_and_slide()
+	$NavigationAgent2D.target_position = get_parent().get_node(\"Player\").global_position
+	if not $NavigationAgent2D.is_navigation_finished():
+		var movement_delta = Speed * delta
+		var current_agent_position = global_position
+		var next_path_position = $NavigationAgent2D.get_next_path_position()
+		velocity = (next_path_position - current_agent_position).normalized() * movement_delta
+		move_and_slide()
+"
+
+[sub_resource type="GDScript" id="GDScript_xeupk"]
+script/source = "extends Camera2D
+
+
+@onready var ShakeNoise = FastNoiseLite.new()
+
+#ORIG VALUES
+@export var ShakeStrength := 50.0
+@export var ShakeSpeed := 25.0
+#COPY OF ORIG VALUES
+var OrigShakeStrength := 0.0
+var OrigShakeSpeed := 0.0
+
+#OTHER VARS
+var NoiseOffset := 0.0
+var IsShaking := false
+var ShakeTimer := Timer.new()
+
+
+func Shake(time:float, Str:=OrigShakeStrength, Spd:=OrigShakeSpeed):
+	ShakeStrength = Str
+	ShakeSpeed = Spd
+	IsShaking = true
+	ShakeTimer.start(time)
+
+func ShakeComplete():
+	IsShaking = false
+	print(\"SHAKE OVER\")
+
+func _ready():
+	OrigShakeSpeed = ShakeSpeed
+	OrigShakeStrength = ShakeStrength
+	
+	ShakeTimer.one_shot = true
+	add_child(ShakeTimer)
+	ShakeTimer.timeout.connect(ShakeComplete)
+	
+	randomize()
+	ShakeNoise.seed = randi()
+	ShakeNoise.frequency = ShakeSpeed
+
+func _process(delta):
+	if IsShaking:
+		offset = GetShakeOffset(delta)
+	else:
+		offset = Vector2.ZERO
+		#print(offset)
+
+func GetShakeOffset(delta : float) -> Vector2:
+	NoiseOffset+=delta
+	return(Vector2(ShakeNoise.get_noise_2d(1,NoiseOffset),ShakeNoise.get_noise_2d(100,NoiseOffset)) *ShakeStrength)
+"
+
+[sub_resource type="GDScript" id="GDScript_h2uiw"]
+script/source = "extends RigidBody2D
+
+@export var Health := 5.0
+
+func TakeDamage(Amt:float):
+	Health -= Amt
+	if Health <= 0.0:
+		Die()
+
+func Die():
+	print(\"CRATE SMASHED\")
+	queue_free()
+"
+
+[node name="Node2D" type="Node2D"]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+position = Vector2(-455, -54)
+navigation_polygon = SubResource("NavigationPolygon_j4qwq")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(644, -386)
+script = SubResource("GDScript_ldhnj")
+Speed = 600.0
+
+[node name="Icon" type="Sprite2D" parent="Player"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Player"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Enemy" type="CharacterBody2D" parent="."]
+position = Vector2(-687, -297)
+script = SubResource("GDScript_cjlrm")
+
+[node name="Icon" type="Sprite2D" parent="Enemy"]
+modulate = Color(0.658824, 0, 0.137255, 1)
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Enemy"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="Enemy"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.5, 0.5)
+script = SubResource("GDScript_xeupk")
+metadata/_edit_lock_ = true
+
+[node name="Crate" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(443, 537)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate2" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(75, 445)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate2"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate2"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate3" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(145, 852)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate3"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate3"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate4" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(-175, 656)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate4"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate4"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate5" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(-469, 901)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate5"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate5"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate6" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(770, 867)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate6"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate6"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate7" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(388, 873)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate7"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate7"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
+
+[node name="Crate8" type="RigidBody2D" parent="." groups=["Damageable"]]
+position = Vector2(823, 560)
+gravity_scale = 0.0
+script = SubResource("GDScript_h2uiw")
+
+[node name="Icon" type="Sprite2D" parent="Crate8"]
+texture = ExtResource("1_61qna")
+metadata/_edit_lock_ = true
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Crate8"]
+polygon = PackedVector2Array(64, -60.8, 64, 59, 59.6, 64, -60.1, 64, -64, 60.7, -64, -59, -59, -63.8, 59.1, -64)
+metadata/_edit_lock_ = true
